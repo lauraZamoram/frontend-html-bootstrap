@@ -180,9 +180,17 @@
         }
 
         async function deleteEquipo(id) {
-            if (!confirm('¿Eliminar equipo?')) return;
-            await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
-            loadEquipos();
+    
+            if (confirm('¿Estás seguro de eliminar equipo?')) {
+                try {
+                    await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+                    loadEquipos();
+                } catch (error) {
+                    console.error('Error deleting equipo:', error);
+                }
+            }
+
+        
         }
 
 
