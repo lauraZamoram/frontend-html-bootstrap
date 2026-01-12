@@ -140,14 +140,11 @@
                     tbody.innerHTML = '<tr><td colspan="7">No hay reservas disponibles.</td></tr>';
                 } else {
                     reservas.forEach(reserva => {
-                        const userNombre = users.find(u => u.id === reserva.usuario_id)?.nombre || 'Desconocido';
-                        const labNombre = labs.find(l => l.id === reserva.laboratorio_id)?.nombre || 'Desconocido';
-                        const equipoNombre = equipos.find(e => e.id === reserva.equipo_id)?.nombre || 'Desconocido';
                         tbody.innerHTML += `
                             <tr>
                                 <td>${reserva.idReserva}</td>
-                                <td>${userNombre}</td>
-                                <td>${labNombre}</td>
+                                <td>${reserva.usuario.nombre}</td>
+                                <td>${reserva.laboratorio.nombre}</td>
                                 <td>${new Date(reserva.fechaHoraInicio).toLocaleString()}</td>
                                 <td>${new Date(reserva.fechaHoraFin).toLocaleString()}</td>
                                 <td>
