@@ -44,7 +44,6 @@
                     <th>ID</th>
                     <th>Usuario</th>
                     <th>Laboratorio</th>
-                    <th>Equipo</th>
                     <th>Fecha Inicio</th>
                     <th>Fecha Fin</th>
                     <th>Acciones</th>
@@ -69,13 +68,9 @@
                             <label for="reservaUser" class="form-label">Usuario</label>
                             <select class="form-control" id="reservaUser" required></select>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3"> 
                             <label for="reservaLab" class="form-label">Laboratorio</label>
                             <select class="form-control" id="reservaLab" required></select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="reservaEquipo" class="form-label">Equipo</label>
-                            <select class="form-control" id="reservaEquipo" required></select>
                         </div>
                         <div class="mb-3">
                             <label for="reservaInicio" class="form-label">Fecha Inicio</label>
@@ -150,12 +145,11 @@
                         const equipoNombre = equipos.find(e => e.id === reserva.equipo_id)?.nombre || 'Desconocido';
                         tbody.innerHTML += `
                             <tr>
-                                <td>${reserva.id}</td>
+                                <td>${reserva.idReserva}</td>
                                 <td>${userNombre}</td>
                                 <td>${labNombre}</td>
-                                <td>${equipoNombre}</td>
-                                <td>${new Date(reserva.fecha_inicio).toLocaleString()}</td>
-                                <td>${new Date(reserva.fecha_fin).toLocaleString()}</td>
+                                <td>${new Date(reserva.fechaHoraInicio).toLocaleString()}</td>
+                                <td>${new Date(reserva.fechaHoraFin).toLocaleString()}</td>
                                 <td>
                                     <!-- Editar no soportado por API -->
                                     <button class="btn btn-sm btn-danger" onclick="deleteReserva(${reserva.id})">Eliminar</button>
@@ -191,7 +185,7 @@
         }
 
         function editReserva(id, usuario_id, laboratorio_id, equipo_id, fecha_inicio, fecha_fin) {
-            document.getElementById('reservaId').value = id;
+            document.getElementById('idRerserva').value = id;
             document.getElementById('reservaUser').value = usuario_id;
             document.getElementById('reservaLab').value = laboratorio_id;
             document.getElementById('reservaEquipo').value = equipo_id;
