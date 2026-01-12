@@ -9,7 +9,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="index.html">Gestión de API</a>
+            <a class="navbar-brand" href="dashboard.html">Reservas de laboratorios ESCOM</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -19,10 +19,7 @@
                         <a class="nav-link" href="roles.html">Roles</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="usuarios.html">Usuarios</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="laboratorios.html">Laboratorios</a>
+                        <a class="nav-link" href="laboratorios.html">Laboratorios</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="equipos.html">Equipos</a>
@@ -32,6 +29,7 @@
                     </li>
                 </ul>
             </div>
+            <button class="btn btn-outline-danger btn-sm" onclick="cerrarSesion()">Salir</button>
         </div>
     </nav>
 
@@ -43,7 +41,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
-                    <th>Descripción</th>
+                    <th>Edificio</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -67,8 +65,8 @@
                             <input type="text" class="form-control" id="laboratorioName" required>
                         </div>
                         <div class="mb-3">
-                            <label for="laboratorioDesc" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="laboratorioDesc" rows="3"></textarea>
+                            <label for="laboratorioEdificio" class="form-label">Edificio</label>
+                            <textarea class="form-control" id="laboratorioEdificio" rows="3"></textarea>
                         </div>
                     </form>
                 </div>
@@ -81,6 +79,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/logout.js"></script>
     <script>
         const API_BASE = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/laboratorios';
 
@@ -99,12 +98,12 @@
                     laboratorios.forEach(laboratorio => {
                         tbody.innerHTML += `
                             <tr>
-                                <td>${laboratorio.id}</td>
+                                <td>${laboratorio.idLaboratorio}</td>
                                 <td>${laboratorio.nombre}</td>
-                                <td>${laboratorio.descripcion || ''}</td>
+                                <td>${laboratorio.edificio || ''}</td>
                                 <td>
                                     <!-- Editar no soportado por API -->
-                                    <button class="btn btn-sm btn-danger" onclick="deleteLaboratorio(${laboratorio.id})">Eliminar</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteLaboratorio(${laboratorio.idLaboratorio})">Eliminar</button>
                                 </td>
                             </tr>
                         `;
@@ -120,7 +119,7 @@
         function editLaboratorio(id, nombre, descripcion) {
             document.getElementById('laboratorioId').value = id;
             document.getElementById('laboratorioName').value = nombre;
-            document.getElementById('laboratorioDesc').value = descripcion;
+            document.getElementById('laboratorioEdificio').value = edificio;
             document.getElementById('modalTitle').textContent = 'Editar Laboratorio';
             new bootstrap.Modal(document.getElementById('addLaboratorioModal')).show();
         }
@@ -139,14 +138,14 @@
         document.getElementById('saveLaboratorioBtn').addEventListener('click', async () => {
             const id = document.getElementById('laboratorioId').value;
             const nombre = document.getElementById('laboratorioName').value;
-            const descripcion = document.getElementById('laboratorioDesc').value;
+            const edificio = document.getElementById('laboratorioEdificio').value;
             const method = id ? 'PUT' : 'POST';
             const url = id ? `${API_BASE}/${id}` : API_BASE;
             try {
                 await fetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, descripcion })
+                    body: JSON.stringify({ nombre, edificio })
                 });
                 document.getElementById('laboratorioForm').reset();
                 bootstrap.Modal.getInstance(document.getElementById('addLaboratorioModal')).hide();

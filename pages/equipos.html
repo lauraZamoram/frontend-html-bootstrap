@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Equipos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="index.html">Gestión de API</a>
+            <a class="navbar-brand" href="dashboard.html">Reservas de laboratorios ESCOM</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -19,35 +21,37 @@
                         <a class="nav-link" href="roles.html">Roles</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="usuarios.html">Usuarios</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="laboratorios.html">Laboratorios</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="equipos.html">Equipos</a>
+                        <a class="nav-link" href="equipos.html">Equipos</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="reservas.html">Reservas</a>
                     </li>
                 </ul>
             </div>
+            <button class="btn btn-outline-danger btn-sm" onclick="cerrarSesion()">Salir</button>
         </div>
     </nav>
 
     <div class="container mt-5">
         <h1>Gestión de Equipos</h1>
-        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEquipoModal">Agregar Equipo</button>
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addEquipoModal">Agregar
+            Equipo</button>
         <table class="table table-striped" id="equiposTable">
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>MAC</th>
+                    <th>No. Serie</th>
+                    <th>IP</th>
                     <th>Laboratorio</th>
-                    <th>Descripción</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
+
             <tbody></tbody>
         </table>
     </div>
@@ -63,18 +67,32 @@
                 <div class="modal-body">
                     <form id="equipoForm">
                         <input type="hidden" id="equipoId">
+
                         <div class="mb-3">
-                            <label for="equipoName" class="form-label">Nombre</label>
-                            <input type="text" class="form-control" id="equipoName" required>
+                            <label class="form-label">Estado</label>
+                            <input type="text" class="form-control" id="equipoEstado" required>
                         </div>
+
                         <div class="mb-3">
-                            <label for="equipoLab" class="form-label">Laboratorio</label>
-                            <select class="form-control" id="equipoLab" required></select>
+                            <label class="form-label">MAC</label>
+                            <input type="text" class="form-control" id="equipoMac" required>
                         </div>
+
                         <div class="mb-3">
-                            <label for="equipoDesc" class="form-label">Descripción</label>
-                            <textarea class="form-control" id="equipoDesc" rows="3"></textarea>
+                            <label class="form-label">Número de Serie</label>
+                            <input type="text" class="form-control" id="equipoSerie" required>
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">IP</label>
+                            <input type="text" class="form-control" id="equipoIp" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Laboratorio</label>
+                            <select class="form-control" id="equipoLab"></select>
+                        </div>
+
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -86,6 +104,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/logout.js"></script>
     <script>
         const API_BASE = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/equipos';
         const LABS_API = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/laboratorios';
@@ -102,45 +121,49 @@
 
         async function loadEquipos() {
             try {
-                const [equiposResponse, labs] = await Promise.all([fetch(API_BASE), loadLabs()]);
-                if (!equiposResponse.ok) {
-                    throw new Error(`HTTP error! status: ${equiposResponse.status}`);
-                }
-                const equipos = await equiposResponse.json();
+                const response = await fetch(API_BASE);
+                const equipos = await response.json();
+
                 const tbody = document.querySelector('#equiposTable tbody');
                 tbody.innerHTML = '';
-                if (equipos.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5">No hay equipos disponibles.</td></tr>';
-                } else {
-                    equipos.forEach(equipo => {
-                        const labNombre = labs.find(l => l.id === equipo.laboratorio_id)?.nombre || 'Desconocido';
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${equipo.id}</td>
-                                <td>${equipo.nombre}</td>
-                                <td>${labNombre}</td>
-                                <td>${equipo.descripcion || ''}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-warning" onclick="editEquipo(${equipo.id}, '${equipo.nombre}', ${equipo.laboratorio_id}, '${equipo.descripcion || ''}')">Editar</button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteEquipo(${equipo.id})">Eliminar</button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
+
+                equipos.forEach(e => {
+                    tbody.innerHTML += `
+                <tr>
+                    <td>${e.idEquipo}</td>
+                    <td>${e.estado}</td>
+                    <td>${e.mac}</td>
+                    <td>${e.numeroSerie}</td>
+                    <td>${e.ip}</td>
+                    <td>${e.laboratorio.nombre}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger"
+                            onclick="deleteEquipo(${e.idEquipo})">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `;
+                });
             } catch (error) {
-                console.error('Error loading equipos:', error);
-                const tbody = document.querySelector('#equiposTable tbody');
-                tbody.innerHTML = `<tr><td colspan="5">Error al cargar equipos: ${error.message}</td></tr>`;
+                console.error('Error cargando equipos', error);
             }
         }
 
+
         async function populateLabSelect() {
-            const labs = await loadLabs();
+            const response = await fetch(LABS_API);
+            const labs = await response.json();
+
             const select = document.getElementById('equipoLab');
             select.innerHTML = '';
-            labs.forEach(lab => {
-                select.innerHTML += `<option value="${lab.id}">${lab.nombre}</option>`;
+
+            labs.forEach(l => {
+                select.innerHTML += `
+            <option value="${l.idLaboratorio}">
+                ${l.nombre}
+            </option>
+        `;
             });
         }
 
@@ -154,7 +177,8 @@
         }
 
         async function deleteEquipo(id) {
-            if (confirm('¿Estás seguro de eliminar este equipo?')) {
+    
+            if (confirm('¿Estás seguro de eliminar equipo?')) {
                 try {
                     await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
                     loadEquipos();
@@ -162,31 +186,45 @@
                     console.error('Error deleting equipo:', error);
                 }
             }
+
+        
         }
+
 
         document.getElementById('saveEquipoBtn').addEventListener('click', async () => {
             const id = document.getElementById('equipoId').value;
-            const nombre = document.getElementById('equipoName').value;
-            const laboratorio_id = parseInt(document.getElementById('equipoLab').value);
-            const descripcion = document.getElementById('equipoDesc').value;
+
+            const payload = {
+                estado: document.getElementById('equipoEstado').value,
+                mac: document.getElementById('equipoMac').value,
+                numeroSerie: document.getElementById('equipoSerie').value,
+                ip: document.getElementById('equipoIp').value,
+                laboratorio: {
+                    idLaboratorio: document.getElementById('equipoLab').value
+                }
+            };
+
             const method = id ? 'PUT' : 'POST';
             const url = id ? `${API_BASE}/${id}` : API_BASE;
-            try {
-                await fetch(url, {
-                    method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, laboratorio_id, descripcion })
-                });
-                document.getElementById('equipoForm').reset();
-                bootstrap.Modal.getInstance(document.getElementById('addEquipoModal')).hide();
-                loadEquipos();
-            } catch (error) {
-                console.error('Error saving equipo:', error);
-            }
+
+            await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            document.getElementById('equipoForm').reset();
+            bootstrap.Modal.getInstance(
+                document.getElementById('addEquipoModal')
+            ).hide();
+
+            loadEquipos();
         });
+
 
         populateLabSelect();
         loadEquipos();
     </script>
 </body>
+
 </html>
