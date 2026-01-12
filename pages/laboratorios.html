@@ -69,7 +69,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="laboratorioEdificio" class="form-label">Edificio</label>
-                            <textarea class="form-control" id="laboratorioDesc" rows="3"></textarea>
+                            <textarea class="form-control" id="laboratorioEdificio" rows="3"></textarea>
                         </div>
                     </form>
                 </div>
@@ -106,7 +106,7 @@
                                 <td>${laboratorio.edificio || ''}</td>
                                 <td>
                                     <!-- Editar no soportado por API -->
-                                    <button class="btn btn-sm btn-danger" onclick="deleteLaboratorio(${laboratorio.id})">Eliminar</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteLaboratorio(${laboratorio.idLaboratorio})">Eliminar</button>
                                 </td>
                             </tr>
                         `;
@@ -122,7 +122,7 @@
         function editLaboratorio(id, nombre, descripcion) {
             document.getElementById('laboratorioId').value = id;
             document.getElementById('laboratorioName').value = nombre;
-            document.getElementById('laboratorioDesc').value = descripcion;
+            document.getElementById('laboratorioEdificio').value = edificio;
             document.getElementById('modalTitle').textContent = 'Editar Laboratorio';
             new bootstrap.Modal(document.getElementById('addLaboratorioModal')).show();
         }
@@ -141,14 +141,14 @@
         document.getElementById('saveLaboratorioBtn').addEventListener('click', async () => {
             const id = document.getElementById('laboratorioId').value;
             const nombre = document.getElementById('laboratorioName').value;
-            const descripcion = document.getElementById('laboratorioDesc').value;
+            const edificio = document.getElementById('laboratorioEdificio').value;
             const method = id ? 'PUT' : 'POST';
             const url = id ? `${API_BASE}/${id}` : API_BASE;
             try {
                 await fetch(url, {
                     method,
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, descripcion })
+                    body: JSON.stringify({ nombre, edificio })
                 });
                 document.getElementById('laboratorioForm').reset();
                 bootstrap.Modal.getInstance(document.getElementById('addLaboratorioModal')).hide();
