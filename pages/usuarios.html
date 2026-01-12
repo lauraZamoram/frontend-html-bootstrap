@@ -113,13 +113,12 @@
                     tbody.innerHTML = '<tr><td colspan="5">No hay usuarios disponibles.</td></tr>';
                 } else {
                     usuarios.forEach(usuario => {
-                        const rolNombre = roles.find(r => r.id === usuario.rol_id)?.nombre || 'Desconocido';
                         tbody.innerHTML += `
                             <tr>
-                                <td>${usuario.id}</td>
+                                <td>${usuario.idUsuario}</td>
                                 <td>${usuario.nombre}</td>
-                                <td>${usuario.email}</td>
-                                <td>${rolNombre}</td>
+                                <td>${usuario.correo}</td>
+                                <td>${usuario.rol.nombre}</td>
                                 <td>
                                     <!-- Editar no soportado por API -->
                                     <button class="btn btn-sm btn-danger" onclick="deleteUsuario(${usuario.id})">Eliminar</button>

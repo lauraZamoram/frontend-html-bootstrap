@@ -43,7 +43,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Nombre</th>
-                    <th>Descripción</th>
+                    <th>Edificio</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -67,7 +67,7 @@
                             <input type="text" class="form-control" id="laboratorioName" required>
                         </div>
                         <div class="mb-3">
-                            <label for="laboratorioDesc" class="form-label">Descripción</label>
+                            <label for="laboratorioEdificio" class="form-label">Edificio</label>
                             <textarea class="form-control" id="laboratorioDesc" rows="3"></textarea>
                         </div>
                     </form>
@@ -99,9 +99,9 @@
                     laboratorios.forEach(laboratorio => {
                         tbody.innerHTML += `
                             <tr>
-                                <td>${laboratorio.id}</td>
+                                <td>${laboratorio.idLaboratorio}</td>
                                 <td>${laboratorio.nombre}</td>
-                                <td>${laboratorio.descripcion || ''}</td>
+                                <td>${laboratorio.edificio || ''}</td>
                                 <td>
                                     <!-- Editar no soportado por API -->
                                     <button class="btn btn-sm btn-danger" onclick="deleteLaboratorio(${laboratorio.id})">Eliminar</button>
