@@ -1,6 +1,5 @@
 // js/auth.js
 
-// URL de tu servicio API
 const API_URL = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/usuarios'; 
 
 const loginForm = document.getElementById('loginForm');
