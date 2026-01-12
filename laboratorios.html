@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Laboratorios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Gestión de API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="roles.html">Roles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="usuarios.html">Usuarios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="laboratorios.html">Laboratorios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="equipos.html">Equipos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="reservas.html">Reservas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1>Gestión de Laboratorios</h1>
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addLaboratorioModal">Agregar Laboratorio</button>
+        <table class="table table-striped" id="laboratoriosTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Modal para agregar/editar laboratorio -->
+    <div class="modal fade" id="addLaboratorioModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Agregar Laboratorio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="laboratorioForm">
+                        <input type="hidden" id="laboratorioId">
+                        <div class="mb-3">
+                            <label for="laboratorioName" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="laboratorioName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="laboratorioDesc" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="laboratorioDesc" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveLaboratorioBtn">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/laboratorios';
+
+        async function loadLaboratorios() {
+            try {
+                const response = await fetch(API_BASE);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const laboratorios = await response.json();
+                const tbody = document.querySelector('#laboratoriosTable tbody');
+                tbody.innerHTML = '';
+                if (laboratorios.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">No hay laboratorios disponibles.</td></tr>';
+                } else {
+                    laboratorios.forEach(laboratorio => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${laboratorio.id}</td>
+                                <td>${laboratorio.nombre}</td>
+                                <td>${laboratorio.descripcion || ''}</td>
+                                <td>
+                                    <!-- Editar no soportado por API -->
+                                    <button class="btn btn-sm btn-danger" onclick="deleteLaboratorio(${laboratorio.id})">Eliminar</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading laboratorios:', error);
+                const tbody = document.querySelector('#laboratoriosTable tbody');
+                tbody.innerHTML = `<tr><td colspan="4">Error al cargar laboratorios: ${error.message}</td></tr>`;
+            }
+        }
+
+        function editLaboratorio(id, nombre, descripcion) {
+            document.getElementById('laboratorioId').value = id;
+            document.getElementById('laboratorioName').value = nombre;
+            document.getElementById('laboratorioDesc').value = descripcion;
+            document.getElementById('modalTitle').textContent = 'Editar Laboratorio';
+            new bootstrap.Modal(document.getElementById('addLaboratorioModal')).show();
+        }
+
+        async function deleteLaboratorio(id) {
+            if (confirm('¿Estás seguro de eliminar este laboratorio?')) {
+                try {
+                    await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+                    loadLaboratorios();
+                } catch (error) {
+                    console.error('Error deleting laboratorio:', error);
+                }
+            }
+        }
+
+        document.getElementById('saveLaboratorioBtn').addEventListener('click', async () => {
+            const id = document.getElementById('laboratorioId').value;
+            const nombre = document.getElementById('laboratorioName').value;
+            const descripcion = document.getElementById('laboratorioDesc').value;
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_BASE}/${id}` : API_BASE;
+            try {
+                await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, descripcion })
+                });
+                document.getElementById('laboratorioForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('addLaboratorioModal')).hide();
+                loadLaboratorios();
+            } catch (error) {
+                console.error('Error saving laboratorio:', error);
+            }
+        });
+
+        loadLaboratorios();
+    </script>
+</body>
+</html>

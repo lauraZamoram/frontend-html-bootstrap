@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Reservas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">Gestión de API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="roles.html">Roles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="usuarios.html">Usuarios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="laboratorios.html">Laboratorios</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="equipos.html">Equipos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="reservas.html">Reservas</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1>Gestión de Reservas</h1>
+        <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addReservaModal">Agregar Reserva</button>
+        <table class="table table-striped" id="reservasTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Laboratorio</th>
+                    <th>Equipo</th>
+                    <th>Fecha Inicio</th>
+                    <th>Fecha Fin</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Modal para agregar/editar reserva -->
+    <div class="modal fade" id="addReservaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Agregar Reserva</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reservaForm">
+                        <input type="hidden" id="reservaId">
+                        <div class="mb-3">
+                            <label for="reservaUser" class="form-label">Usuario</label>
+                            <select class="form-control" id="reservaUser" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reservaLab" class="form-label">Laboratorio</label>
+                            <select class="form-control" id="reservaLab" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reservaEquipo" class="form-label">Equipo</label>
+                            <select class="form-control" id="reservaEquipo" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reservaInicio" class="form-label">Fecha Inicio</label>
+                            <input type="datetime-local" class="form-control" id="reservaInicio" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reservaFin" class="form-label">Fecha Fin</label>
+                            <input type="datetime-local" class="form-control" id="reservaFin" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveReservaBtn">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/reservas';
+        const USERS_API = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/usuarios';
+        const LABS_API = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/laboratorios';
+        const EQUIPOS_API = 'http://proyectofinal-env.eba-mfcifdqv.us-east-2.elasticbeanstalk.com/api/equipos';
+
+        async function loadUsers() {
+            try {
+                const response = await fetch(USERS_API);
+                return await response.json();
+            } catch (error) {
+                console.error('Error loading users:', error);
+                return [];
+            }
+        }
+
+        async function loadLabs() {
+            try {
+                const response = await fetch(LABS_API);
+                return await response.json();
+            } catch (error) {
+                console.error('Error loading labs:', error);
+                return [];
+            }
+        }
+
+        async function loadEquipos() {
+            try {
+                const response = await fetch(EQUIPOS_API);
+                return await response.json();
+            } catch (error) {
+                console.error('Error loading equipos:', error);
+                return [];
+            }
+        }
+
+        async function loadReservas() {
+            try {
+                const [reservasResponse, users, labs, equipos] = await Promise.all([fetch(API_BASE), loadUsers(), loadLabs(), loadEquipos()]);
+                if (!reservasResponse.ok) {
+                    throw new Error(`HTTP error! status: ${reservasResponse.status}`);
+                }
+                const reservas = await reservasResponse.json();
+                const tbody = document.querySelector('#reservasTable tbody');
+                tbody.innerHTML = '';
+                if (reservas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7">No hay reservas disponibles.</td></tr>';
+                } else {
+                    reservas.forEach(reserva => {
+                        const userNombre = users.find(u => u.id === reserva.usuario_id)?.nombre || 'Desconocido';
+                        const labNombre = labs.find(l => l.id === reserva.laboratorio_id)?.nombre || 'Desconocido';
+                        const equipoNombre = equipos.find(e => e.id === reserva.equipo_id)?.nombre || 'Desconocido';
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${reserva.id}</td>
+                                <td>${userNombre}</td>
+                                <td>${labNombre}</td>
+                                <td>${equipoNombre}</td>
+                                <td>${new Date(reserva.fecha_inicio).toLocaleString()}</td>
+                                <td>${new Date(reserva.fecha_fin).toLocaleString()}</td>
+                                <td>
+                                    <!-- Editar no soportado por API -->
+                                    <button class="btn btn-sm btn-danger" onclick="deleteReserva(${reserva.id})">Eliminar</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading reservas:', error);
+                const tbody = document.querySelector('#reservasTable tbody');
+                tbody.innerHTML = `<tr><td colspan="7">Error al cargar reservas: ${error.message}</td></tr>`;
+            }
+        }
+
+        async function populateSelects() {
+            const [users, labs, equipos] = await Promise.all([loadUsers(), loadLabs(), loadEquipos()]);
+            const userSelect = document.getElementById('reservaUser');
+            const labSelect = document.getElementById('reservaLab');
+            const equipoSelect = document.getElementById('reservaEquipo');
+            userSelect.innerHTML = '';
+            labSelect.innerHTML = '';
+            equipoSelect.innerHTML = '';
+            users.forEach(user => {
+                userSelect.innerHTML += `<option value="${user.id}">${user.nombre}</option>`;
+            });
+            labs.forEach(lab => {
+                labSelect.innerHTML += `<option value="${lab.id}">${lab.nombre}</option>`;
+            });
+            equipos.forEach(equipo => {
+                equipoSelect.innerHTML += `<option value="${equipo.id}">${equipo.nombre}</option>`;
+            });
+        }
+
+        function editReserva(id, usuario_id, laboratorio_id, equipo_id, fecha_inicio, fecha_fin) {
+            document.getElementById('reservaId').value = id;
+            document.getElementById('reservaUser').value = usuario_id;
+            document.getElementById('reservaLab').value = laboratorio_id;
+            document.getElementById('reservaEquipo').value = equipo_id;
+            document.getElementById('reservaInicio').value = new Date(fecha_inicio).toISOString().slice(0, 16);
+            document.getElementById('reservaFin').value = new Date(fecha_fin).toISOString().slice(0, 16);
+            document.getElementById('modalTitle').textContent = 'Editar Reserva';
+            new bootstrap.Modal(document.getElementById('addReservaModal')).show();
+        }
+
+        async function deleteReserva(id) {
+            if (confirm('¿Estás seguro de eliminar esta reserva?')) {
+                try {
+                    await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+                    loadReservas();
+                } catch (error) {
+                    console.error('Error deleting reserva:', error);
+                }
+            }
+        }
+
+        document.getElementById('saveReservaBtn').addEventListener('click', async () => {
+            const id = document.getElementById('reservaId').value;
+            const usuario_id = parseInt(document.getElementById('reservaUser').value);
+            const laboratorio_id = parseInt(document.getElementById('reservaLab').value);
+            const equipo_id = parseInt(document.getElementById('reservaEquipo').value);
+            const fecha_inicio = document.getElementById('reservaInicio').value;
+            const fecha_fin = document.getElementById('reservaFin').value;
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `${API_BASE}/${id}` : API_BASE;
+            try {
+                await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario_id, laboratorio_id, equipo_id, fecha_inicio, fecha_fin })
+                });
+                document.getElementById('reservaForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('addReservaModal')).hide();
+                loadReservas();
+            } catch (error) {
+                console.error('Error saving reserva:', error);
+            }
+        });
+
+        populateSelects();
+        loadReservas();
+    </script>
+</body>
+</html>
